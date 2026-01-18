@@ -111,7 +111,6 @@ def smiles_to_graph(smiles):
     return Data(x=x, edge_index=edge_index)
 
 
-# -------------------- Scaffold --------------------
 def scaffold(smiles):
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
@@ -119,7 +118,6 @@ def scaffold(smiles):
     return MurckoScaffold.MurckoScaffoldSmiles(mol=mol)
 
 
-# -------------------- GNN Model --------------------
 class HIVGNN(nn.Module):
     def __init__(self, num_features, hidden_dim=128, num_layers=3):
         super().__init__()
@@ -179,7 +177,6 @@ if not os.path.exists(csv_path):
 
 df = pd.read_csv(csv_path).dropna()
 
-# Filter PAINS if enabled
 if FILTER_PAINS:
     print("Filtering PAINS compounds...")
     df['is_pains'] = df['smiles'].apply(is_pains)
@@ -206,12 +203,10 @@ df = pd.DataFrame({"smiles": df["smiles"].iloc[:len(y)], "scaffold": scaffolds})
 print(f"\nLoaded {len(graphs)} valid molecules")
 print(f"Number of atom features: {graphs[0].x.shape[1]} ({'2D only' if not USE_3D else '2D + 3D coordinates'})")
 
-# Check how many 3D generations failed
 if USE_3D:
     failed_3d = 0
     for graph in graphs:
-        # Check if all atoms have (0,0,0) coordinates
-        coords = graph.x[:, -3:]  # Last 3 features are x,y,z
+        coords = graph.x[:, -3:]
         if torch.all(coords == 0):
             failed_3d += 1
 
@@ -221,7 +216,6 @@ if USE_3D:
     print(f"  Failed:     {failed_3d}/{len(graphs)} ({failed_3d / len(graphs) * 100:.1f}%)")
     print(f"  (Failed molecules use dummy coordinates and rely on 2D features)")
 
-# -------------------- Create 5-Fold Scaffold Split --------------------
 unique_scaffolds = list(df["scaffold"].unique())
 np.random.shuffle(unique_scaffolds)
 
@@ -254,14 +248,12 @@ for fold in range(FOLDS):
     val_loader = DataLoader(val_graphs, batch_size=BATCH_SIZE)
     test_loader = DataLoader(test_graphs, batch_size=BATCH_SIZE)
 
-    # Calculate positive weight for loss
     y_train = np.array([y[i] for i in train_idx])
     pos_weight = torch.tensor(
         (y_train == 0).sum() / (y_train == 1).sum(),
         device=DEVICE, dtype=torch.float32
     )
 
-    # Initialize model
     num_features = graphs[0].x.shape[1]
     model = HIVGNN(num_features=num_features).to(DEVICE)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
@@ -276,7 +268,6 @@ for fold in range(FOLDS):
     counter = 0
 
     for epoch in range(EPOCHS):
-        # Training
         model.train()
         total_loss = 0
         for batch in train_loader:
@@ -288,7 +279,6 @@ for fold in range(FOLDS):
             optimizer.step()
             total_loss += loss.item()
 
-        # Validation
         model.eval()
         val_preds = []
         val_labels = []
