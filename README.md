@@ -1,40 +1,90 @@
 # HIV-drug-discovery
-A OpenSource model for researchers to use for finding new HIV drugs without having to test thousands of molecules in a lab. Currently in **Alpha stage**
 
-# Motive while building model
+An **open-source Graph Neural Network (GNN) framework** for **HIV activity classification**, designed to help researchers prioritize candidate molecules **before costly wet-lab testing**.
 
-To build a good, accurate model that researchers can use for free
+**Status:** Alpha (research prototype)
 
-# Dataset
+---
 
+## Motivation
+
+HIV drug discovery is expensive, slow, and experimentally intensive.  
+This project aims to provide a **free, transparent, and reproducible baseline model** that can:
+
+- Screen large molecular libraries
+- Learn structure–activity relationships
+- Reduce the number of compounds requiring laboratory assays
+
+This is **not a production model** and should be used for **research and experimentation only**.
+
+---
+
+## Dataset
+
+**Source:**  
 https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/HIV.csv
 
-Dataset contains around 41K molecules. Heavy class imbalance(2.5% actives only), some assay compounds, need to filter invalid molecules
+**Description:**
+- ~41,000 small molecules
+- Binary label: `HIV_active`
+- Heavy class imbalance (~2.5% actives)
+- Mixed assay conditions
+- Contains invalid and problematic SMILES
 
-**Cleaning dataset**
+---
 
-1. Remove invalid molecules:
-  Remove invalid SMILES(Notation for molecules)
-  Remove Invalid molecules after 3D embedding if embedding fails(not implemented yet)
-  Remove if graph is invalid(num.features = 0)
-  Invalid Edges (Empty Bond Graph) are handled by setting value to 0
-  Remove molecule if graph or scaffold is None
-**NOTE**: Molecules with failed 3D embedding are currently not removed.
+## Dataset Cleaning & Filtering
 
-3. PAINS filtering:
-PAINS are chemical compounds that often give false positive results in high-throughput screens.
-Filter using FilterCatalog from rdkit
+### 1. Molecule Validation
+A molecule is removed if:
+- SMILES parsing fails
+- Graph construction fails
+- Atom feature matrix is empty
+- Scaffold extraction fails
 
-Neural network type:
-GNN with atoms as nodes and bonds as edges
+Invalid edge cases (e.g., molecules with no bonds) are handled safely.
 
-ATOMS
-FEATURE COUNT - 26
+### 2. Scaffold Extraction
+- Murcko scaffolds are generated using RDKit
+- Used for **scaffold-based cross-validation**
+- Prevents data leakage across folds
 
-Atom type, Atoms Degrees, Hybridization type, IsAromatic, Num. Hydrogens
-Nodes added later(Bonds)
+### 3. PAINS Filtering
+- PAINS (Pan-Assay Interference Compounds) are filtered using RDKit `FilterCatalog`
+- Helps reduce false positives common in high-throughput screening
 
-Model:
+> **Note:** The current model uses **2D molecular graphs only**.  
+> 3D conformer generation and geometry-aware modeling are **not enabled**.
+
+---
+
+## Molecular Representation (2D)
+
+### Nodes (Atoms)
+Each atom is represented by a **26-dimensional feature vector**, including:
+- Atom type
+- Atom degree
+- Formal charge
+- Hybridization
+- Aromaticity
+- Hydrogen count
+
+### Edges (Bonds)
+- Undirected covalent bonds
+- Purely topological (no geometry)
+
+---
+
+## Model Architecture
+
+**Type:** 2D Graph Neural Network (GCN-based)
+
+### Global Readout
+- Global mean pooling
+- Global max pooling
+
+### Prediction Head
+```python
 self.mlp = nn.Sequential(
     nn.Linear(hidden_dim * 2, 256),
     nn.ReLU(),
@@ -44,18 +94,49 @@ self.mlp = nn.Sequential(
     nn.Dropout(0.3),
     nn.Linear(128, 1)
 )
-**Note: Not optimized for 3D gnn yet**
+```
 
-Model uses BCEWITHLOGITSLOSS
-Optimizer - Adam weight decay
+### Training
+- Loss: BCEWithLogitsLoss (class-weighted)
+- Optimizer: Adam + weight decay
+- Scheduler: ReduceLROnPlateau
+- Early stopping on validation AUC
 
-**Model is not properly functional yet(Expexted results would be around 0.70 AUC compared to the 0.78 AUC with previously 2D model.) Parameters still under testing**
+---
+
+## Evaluation
+
+- 5-fold scaffold-based cross-validation
+- Metric: ROC-AUC
+
+**Expected performance:** ~0.65–0.72 AUC (baseline)
+
+---
+
+## Limitations
+
+- No bond features
+- No 3D geometry
+- No target conditioning
+- Dataset noise from mixed assays
+
+---
+
+## Roadmap
+
+- GIN / GAT architectures
+- Bond feature integration
+- Geometry-aware GNNs (EGNN)
+- Multi-conformer pooling
+- Model ensembling
+
+---
 
 ## Citation Requirement
 
-If you use this software in research, you must cite:
+If you use this software in research, you **must cite**:
 
-Arjun Chandra Agarwal, “HIV drug classification”, 2026, https://github.com/v659/HIV-drug-discovery
-
-If you deploy this software in a public service or distribute modified versions,
-you must include this citation in the documentation or “About” page.
+Arjun Chandra Agarwal,  
+“HIV drug classification”,  
+2026,  
+https://github.com/v659/HIV-drug-discovery
