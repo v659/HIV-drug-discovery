@@ -1,0 +1,118 @@
+prototype 1.0:
+72.37%
+Uses Elastic Net NN
+def __init__(self, input_dim=1024, hidden_dim=32, dropout=0.5):
+    super().__init__()
+    self.model = nn.Sequential(
+        nn.Linear(input_dim, hidden_dim),
+        nn.ReLU(),
+        nn.Dropout(dropout),
+        nn.Linear(hidden_dim, 1)
+    )
+BADBADBADBADBADBADBAD
+
+prototype 2.0
+
+oversampling actives to equalize the dataset 50-50
+
+multiple randoms:
+CCC(C)C(NC(=O)c1ccccc1S)C(=O)O → 0.9937
+CCC(=O)CCC1=Nc2nnc(CCCCc3nnc4n3C(=O)C(CCC(=O)CC)=N4)n2C1=O → 0.0044
+O=C1Nc2ccccc2Oc2ccccc21 → 0.9940
+O=C(C=Cc1ccccc1)NC1C=Nc2ccccc2NC1=O → 0.9710
+CNc1ccc(Cl)cc1S(=O)(=O)c1ccccc1 → 0.0054
+COCc1cc(=O)oc2c3c(c4c(c12)OC(C)(C)CC4)OC(C)C(C)C3O → 0.8667
+CC(C)(C)C(=O)OCOP(=O)(OCOC(=O)C(C)(C)C)OCC1CCC(n2ccc(=O)[nH]c2=O)O1 → 0.9981
+Nc1c(S(=O)(=O)O)cc2cc(S(=O)(=O)O)ccc2c1N=Nc1ccc(CCc2ccc(N=Nc3c(N)c(S(=O)(=O)O)cc4cc(S(=O)(=O)O)ccc34)cc2S(=O)(=O)O)c(S(=O)(=O)O)c1.[NaH] → 0.9976
+COc1cc(C2SC(=N)Nc3c2c(C)nn3C(=O)Cc2ccccc2)cc(OC)c1OC → 0.9968
+C[N+](C)(C)C.O=S(O)(=[OH+])c1cc(N=Nc2cc(S(=O)(O)=[OH+])c3cccnc3c2O[Zn]Cl)ccc1C=Cc1ccc(N=Nc2cc(S(=O)(O)=[OH+])c3cccnc3c2O[Zn]Cl)cc1S(=O)(O)=[OH+] → 0.9963
+C[N+](C)(C)C.O=C(Nc1ccc(C=Cc2ccc(NC(=O)c3cc(S(=O)(O)=[OH+])ccc3O)cc2S(=O)(O)=[OH+])c(S(=O)(O)=[OH+])c1)c1cc(S(=O)(O)=[OH+])ccc1O → 0.0104
+CCNC(=O)CNC(=O)C(Cc1ccc([N+](=O)[O-])cc1)NC(=O)OC(C)(C)C → 0.0000
+CSc1ccn(C2CC(F)C(CO)O2)c(=O)n1 → 0.9834
+Nc1c(S(=O)(=O)O)cc(S(=O)(=O)O)c2ccc(N=Nc3ccc(C=Cc4ccc(N=Nc5ccc6c(S(=O)(=O)O)cc(S(=O)(=O)O)c(N)c6c5O)cc4S(=O)(=O)O)c(S(=O)(=O)O)c3)c(O)c12.[NaH] → 0.9986
+Cl.Cn1cc(N)cc1C(=O)Nc1cc(C(=O)Nc2ccc3cc(S(=O)(=O)O)cc(S(=O)(=O)O)c3c2)n(C)n1.[KH] → 0.9973
+CCSCCCCCCCCCCC(=O)OCC1OC(n2cc(C)c(=O)[nH]c2=O)CC1N=[N+]=[N-] → 0.9998
+Cc1coc(C)c1C(=S)Nc1ccc(Cl)c(C(=O)OC(C)C)c1 → 0.9990
+CC(=O)NNC(=S)NC=C(C(=O)c1ccccc1)c1ccccc1 → 0.9943
+Cc1cn(C2CC3C(COCN3O)O2)c(=O)[nH]c1=O → 0.9975
+CCCc1cc(=O)oc2c3c(cc(OC(C)C)c12)OC(C)C(C)C3=O → 0.9977
+COc1cc(C2Oc3c(OC)cc(C=CC(=O)O)cc3C2C(=O)O)ccc1O → 0.9957
+Cc1nn(C(=O)Cc2ccccc2)c2c1C(c1ccccc1)SC(=N)N2 → 0.9969
+Cc1cc(-c2ccc(N=Nc3c(S(=O)(=O)O)cc4cc(S(=O)(=O)O)cc(N)c4c3O)c(C)c2)ccc1N=Nc1c(S(=O)(=O)O)cc2cc(S(=O)(=O)O)cc(N)c2c1O → 0.9969
+COC(=O)c1cc(C(=CCCCCN=[N+]=[N-])c2cc(Cl)c(OC)c(C(=O)OC)c2)cc(Cl)c1OC → 0.9981
+O=C(CCCC[n+]1ccccc1)Sc1ccccc1C(=O)Nc1ccc(S(=O)(=O)c2ccc([N+](=O)[O-])cc2)cc1.[Br-] → 0.9925,
+CC(C)C(N=C1CC2CCC1(C(=O)Nc1ccccc1O)C2(C)C)c1ccccc1 → 0.9970
+S=C1NCCN1C(=S)NC1CCCCC1 → 0.9954
+Cc1cn(C2CC(N=[N+]=[N-])C(COC(=O)C3C(C#N)CC4C5CCC6=CC(=O)C=CC6(C)C5C(O)CC43C)O2)c(=O)[nH]c1=O → 0.9998
+COc1ccc(N2C(=O)C3c4[nH]c5ccc(C)cc5c4C4CCC(C(C)(C)C)CC4C3C2=O)cc1 → 0.9971
+O=C(Nc1ccc(C2=NCCN2)cc1)Nc1cccc(C(=O)Nc2ccc(C3=NCCN3)cc2)c1 → 0.9968
+Cn1c(=O)c2nc(SSc3nc4c(=O)n(C)c(=O)n(C)c4[nH]3)[nH]c2n(C)c1=O → 0.9969
+CSCCC(NOC(=O)Cc1ccccc1)P(=O)(O)c1ccccc1 → 0.9966
+O=[N+]([O-])c1ccc(Cl)c(C2SCc3nc4ccccc4n32)c1 → 0.9950
+CC(C)CCCC(C)C1CCC2C3CCC4CC(CCC=C(c5cc(Cl)c(O)c(C(=O)O)c5)c5cc(Cl)c(O)c(C(=O)O)c5)CCC4(C)C3CCC12C → 0.9992
+CC(=O)NS(=O)(=O)c1ccc(NC(=O)c2ccccc2SC(=O)c2ccccc2)cc1 → 0.9980
+C=C1C(=O)OC2C=C(C)C3=CC(=O)C(C)(CC(OC(=O)C(C)=CC)C12)O3 → 0.0000
+O=C1c2c(O)ccc(O)c2C(=O)c2c(NCCCO)ccc(NCCCO)c21 → 0.4559
+CCCC(=O)Oc1c(Cl)cc(C(=CCCC2CCC3(C)C(CCC4C3CCC3(C)C(C(C)CCCC(C)C)CCC43)C2)c2cc(Cl)c(OC(=O)CCC)c(C(=O)O)c2)cc1C(=O)O.[NaH] → 0.9993
+Cc1occc1C(=S)Nc1ccc(Cl)c(C(=O)OCC(F)(F)F)c1 → 0.9971
+Cc1cc(NC(=O)c2ccc(N=Nc3cc(S(=O)(=O)O)c4ccccc4c3O)cc2)ccc1N=Nc1ccc2cc(S(=O)(=O)O)cc(S(=O)(=O)O)c2c1 → 0.9986
+CCCCCOCCCCCCCC(=O)OCC1OC(n2cc(C)c(=O)[nH]c2=O)CC1N=[N+]=[N-] → 0.9998
+Cc1ccc(C(=O)Nc2ccc(S(=O)(=O)O)c3cc(S(=O)(=O)O)cc(S(=O)(=O)O)c23)cc1NC(=O)Nc1cc(C(=O)Nc2ccc(S(=O)(=O)O)c3cc(S(=O)(=O)O)cc(S(=O)(=O)O)c23)ccc1C.[NaH] → 0.9870
+CCCCCCCCCCCCCCCCCCSCC(COP(=O)(O)OP(=O)(O)OCC1OC(n2ccc(=O)[nH]c2=O)CC1N=[N+]=[N-])OC(=O)CCCCCCCCCCCCCCC.[NaH] → 0.9997
+Cc1nn(C(=O)Cc2ccccc2)c2c1C(c1ccc(N(C)C)cc1)SC(=N)N2 → 0.9969
+COC1N(C2C=CC(CO)O2)C(=O)NC(=O)C1(C)Cl → 0.6440
+O=[N+]([O-])c1ccc2c(c1)nc1n2C(c2c(F)cccc2F)SC1 → 0.0000
+Cc1ccc(S(=O)(=O)NN=C2CCC3(O)CC2(C)CCC2C3CC2(C)C)cc1 → 0.9967
+N#Cc1cccc(C2SCc3nc4ccccc4n32)c1 → 0.9975
+O=C(Nc1ccc(N=Nc2ccc(S(=O)(=O)O)cc2)cc1)c1ccc(N=Nc2c(S(=O)(=O)O)cc(O)c3c(NC(=O)c4ccccc4)cc(S(=O)(=O)O)cc23)cc1 → 0.0163
+N=C(CCSS(=O)(=O)O)NCC(c1ccccc1)c1ccccc1 → 0.0000
+O=C1OCC2OC(O)C(O)C(O)C2OC(=O)c2cc(O)c(O)c(O)c2-c2c(O)c(O)c3oc(=O)c4c(c(O)c(O)c5oc(=O)c2c3c54)-c2c1cc(O)c(O)c2O → 0.9978
+O=S(=O)(O)c1cc(N=Nc2cc(S(=O)(=O)O)c3cccnc3c2O)ccc1C=Cc1ccc(N=Nc2cc(S(=O)(=O)O)c3cccnc3c2O)cc1S(=O)(=O)O.[NaH] → 0.9976
+CN1C(=CC=CC=CC=C2C(=O)c3ccccc3C2=O)C(C)(C)c2ccccc21 → 0.9969
+O=C(C=Cc1ccccc1)NC1C=Nc2ccccc2NC1=O → 0.9710
+CCCCCCC.CN1C(=O)CN=C(c2ccc[nH]2)c2cc(Cl)ccc21 → 0.9969
+Cc1cc(S(=O)(=O)Nc2nc(=N)n(-c3ccccn3)[nH]2)c(S)cc1Cl → 0.9953
+Fc1cccc(Cl)c1C1SCc2nc3ccccc3n21 → 0.9864
+CSCCOC(=O)c1cc(NC(=S)c2ccoc2C)ccc1Cl → 0.9990
+CCCc1cc(=O)oc2c3c(cc(OC(C)CC)c12)OC(C)C(C)C3O → 0.9983
+CN(c1ccc(C(N)=O)cc1)c1c(O)nc2ccccc2c1O → 0.9968
+CNc1c(Cl)cccc1S(=O)(=O)c1ccccc1[N+](=O)[O-] → 0.9986
+CCCCCCCCCCCCCCCC(=O)Nc1ccn(C2CC(OP(=O)(O)OCC3OC(n4cc(C)c(=O)[nH]c4=O)CC3N=[N+]=[N-])C(CO)O2)c(=O)n1 → 0.9998
+CC(C)Oc1c(-c2ccc(F)cc2)c(O)c2c3c1oc(=O)n3C=CC2C → 0.0000
+CC=CCOc1cc(NC(=S)OC(C)C)ccc1Cl.CC=CCOc1cc(NC(=S)OC(C)C)ccc1Cl → 0.9517
+O=c1[nH]nc(Cc2ccccc2)n1N=Cc1c(O)ccc2ccccc12 → 0.9953
+Cc1cn(C2CC(ON3C(=O)c4ccccc4C3=O)C(CO)O2)c(=O)[nH]c1=O → 0.9943
+
+58 samples
+10 wrong
+48 correct
+
+48/58 = 82.8
+Matches perfectly with:
+FINAL TEST AUC: 0.8050,
+Val AUC: 0.8209
+
+Other batch - 82.86 accuracy also!!
+
+Extreme consistency
+
+To do:
+Redo oversampling - Use Matched Molecular Pairs
+
+Convert to GNN
+
+HyperParameters Manual tuning
+
+GNN
+
+==================================================
+=== 5-Fold Cross-Validation Results ===
+==================================================
+Individual fold AUCs: ['0.7506', '0.7643', '0.7944', '0.7925', '0.7920']
+Mean Test AUC = 0.7788
+Std Test AUC  = 0.0179
+
+EXCELLENT RESULTS!!!
+
+Currently implemented - GNN with 26 features per atom, atoms are nodes, bonds are edges, pos weight to fix class imbalance
+To add - downsampling.
