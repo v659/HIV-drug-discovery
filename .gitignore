@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Large model checkpoints — distributed via Zenodo, not git.
+# GitHub has a 100 MB/file hard limit; MolFormer checkpoints are ~170 MB each.
+src/best_molformer_fold*.pth
+
+# Preprocessed dataset cache — regenerable from src/main.py.
+src/hiv_preprocessed_cache_*.pt
+
+# Generated test/debug files
+smiles_test.txt
+mixed_test_predictions.txt
+
+# All trained-model artifacts are distributed via Zenodo, not git.
+# Reproducible from src/main.py + src/fit_ensemble_stacker.py.
+src/best_gnn_fold*.pth
+src/ensemble_stacker.pt
+src/global_feature_stats_*.pt
