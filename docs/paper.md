@@ -1,9 +1,18 @@
-# Closing the gap on a $0 budget: ensembling public molecular foundation models for HIV bioactivity prediction
+---
+title: "Closing the gap on a \\$0 budget: ensembling public molecular foundation models for HIV bioactivity prediction"
+author: "Arjun Chandra Agarwal (Independent)"
+date: "May 2026"
+papersize: a4
+margin-left: 1in
+margin-right: 1in
+margin-top: 1in
+margin-bottom: 1in
+fontsize: 11pt
+mainfont: "New Computer Modern"
+linkcolor: blue
+---
 
-**Author:** Arjun Chandra Agarwal
-**Affiliation:** Independent
 **Status:** Preprint draft — target venue ChemRxiv / arXiv (cs.LG, q-bio.QM)
-**Date:** 2026
 
 ---
 
@@ -319,11 +328,11 @@ This work used Google Colaboratory's free GPU tier and IBM's publicly-released M
 
 All figures are vector PDFs in `docs/figures/`, generated reproducibly by `src/make_figures.py` from saved out-of-fold predictions in `src/ensemble_stacker.pt`.
 
-- **Figure 1** (`fig1_fold_aucs.pdf`) — Per-fold scaffold-held-out test AUC for the GNN and MolFormer-XL across all five folds, with mean reference lines.
-- **Figure 2** (`fig2_oof_roc.pdf`) — ROC curves on n = 24,391 out-of-fold predictions for Tanimoto-NN, GNN, MolFormer-XL, and the final stacker.
-- **Figure 3** (`fig3_oof_pr.pdf`) — Precision-Recall curves on the same OOF predictions, with the 3.7%-base-rate random reference line.
-- **Figure 4** (`fig4_calibration.pdf`) — Reliability diagram (quantile-binned) comparing raw MolFormer-XL probabilities against the calibrated stacker output. Axes are zoomed to [0, 0.5] × [0, 0.3] because at a 3.7% base rate the upper-right of the unit square is unpopulated.
-- **Figure 5** (`fig5_threshold_sweep.pdf`) — Recall, precision, and F1 vs decision threshold on the OOF stacker output, with Youden's J, base-rate, and F1-max thresholds marked.
+- **Figure 1** (`docs/figures/fig1_fold_aucs.pdf`) — Per-fold scaffold-held-out test AUC for the GNN and MolFormer-XL across all five folds, with mean reference lines.
+- **Figure 2** (`docs/figures/fig2_oof_roc.pdf`) — ROC curves on n = 24,391 out-of-fold predictions for Tanimoto-NN, GNN, MolFormer-XL, and the final stacker.
+- **Figure 3** (`docs/figures/fig3_oof_pr.pdf`) — Precision-Recall curves on the same OOF predictions, with the 3.7%-base-rate random reference line.
+- **Figure 4** (`docs/figures/fig4_calibration.pdf`) — Reliability diagram (quantile-binned) comparing raw MolFormer-XL probabilities against the calibrated stacker output. Axes are zoomed to [0, 0.5] × [0, 0.3] because at a 3.7% base rate the upper-right of the unit square is unpopulated.
+- **Figure 5** (`docs/figures/fig5_threshold_sweep.pdf`) — Recall, precision, and F1 vs decision threshold on the OOF stacker output, with Youden's J, base-rate, and F1-max thresholds marked.
 
 ---
 
