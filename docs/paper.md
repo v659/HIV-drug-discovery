@@ -259,11 +259,15 @@ The methodological implication is that low-resource molecular ML — accessible 
 
 ## 10. Reproducibility
 
-I release all code, configuration, splits, trained checkpoints, and saved stacker coefficients at:
+I release all code, configuration, and splits at:
 
-> https://github.com/v659/HIV-drug-discovery
+> **Source code:** https://github.com/v659/HIV-drug-discovery (MIT licensed)
 
-The full pipeline (GNN training + MolFormer fine-tuning + stacker fitting + inference) reproduces from a clean clone in approximately 10 hours of wall-clock time on Google Colab free-tier and Apple Silicon, at $0 cost.
+Trained model checkpoints, per-fold normalization statistics, the fitted ensemble stacker, and the preprocessed graph cache are archived on Zenodo with a citable DOI:
+
+> **Pretrained artifacts (Zenodo):** https://doi.org/10.5281/zenodo.19946459
+
+The full pipeline (GNN training + MolFormer fine-tuning + stacker fitting + inference) reproduces from a clean clone in approximately 10 hours of wall-clock time on Google Colab free-tier and Apple Silicon, at $0 cost. To reproduce inference only without retraining, download the Zenodo bundle and unzip into `src/`.
 
 I provide a complete reproduction recipe, including the exact `pip` environment and version-pinned dependencies (notably `transformers==4.46.3` to maintain MolFormer-XL compatibility), in `README.md`.
 

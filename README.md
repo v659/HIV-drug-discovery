@@ -201,9 +201,26 @@ src/
 
 ---
 
+## Pretrained checkpoints
+
+Trained MolFormer-XL and GNN fold checkpoints, per-fold normalization stats, the fitted ensemble stacker, and the preprocessed graph cache are archived on Zenodo:
+
+> **DOI:** [10.5281/zenodo.19946459](https://doi.org/10.5281/zenodo.19946459)
+
+Download the bundle and unzip into `src/` to run inference without retraining:
+
+```bash
+# After downloading hiv_classifier_artifacts_v1.zip from Zenodo
+unzip hiv_classifier_artifacts_v1.zip -d src/
+python src/ensemble_inference.py --stacker src/ensemble_stacker.pt --smiles 'CC(=O)OC1=CC=CC=C1C(=O)O'
+```
+
+---
+
 ## Citation
 
-If you use this software in research, please cite:
+If you use this software or the pretrained checkpoints in research, please cite both:
 
-> Arjun Chandra Agarwal, "HIV drug classification", 2026.
-> https://github.com/v659/HIV-drug-discovery
+> Agarwal, A. C. (2026). *Closing the gap on a $0 budget: ensembling public molecular foundation models for HIV bioactivity prediction*. Preprint, ChemRxiv.
+> Source code: https://github.com/v659/HIV-drug-discovery
+> Trained artifacts: https://doi.org/10.5281/zenodo.19946459
