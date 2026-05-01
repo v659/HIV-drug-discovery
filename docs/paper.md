@@ -104,11 +104,11 @@ For each fold *i*, both my GNN-fold-*i* and MolFormer-fold-*i* checkpoints produ
 
 I fit a logistic regression on the OOF predictions:
 
-> P_final = sigmoid( w_gnn · P_gnn + w_mf · P_mf + b )
+$$P_{\text{final}} = \sigma\!\left(w_{\text{gnn}} \cdot P_{\text{gnn}} + w_{\text{mf}} \cdot P_{\text{mf}} + b\right)$$
 
-Fitted coefficients (5-fold OOF, n = 24,391):
+Fitted coefficients (5-fold OOF, $n = 24{,}391$):
 
-> w_gnn = 2.49, w_mf = 6.44, b = -7.24
+$$w_{\text{gnn}} = 2.49,\quad w_{\text{mf}} = 6.44,\quad b = -7.24$$
 
 The implied weight ratio (MolFormer ≈ 0.72, GNN ≈ 0.28) reflects MolFormer's stronger single-model performance, while the strongly negative intercept calibrates the ensemble's output to the dataset's ~3.7% positive base rate.
 
@@ -328,11 +328,15 @@ This work used Google Colaboratory's free GPU tier and IBM's publicly-released M
 
 All figures are vector PDFs in `docs/figures/`, generated reproducibly by `src/make_figures.py` from saved out-of-fold predictions in `src/ensemble_stacker.pt`.
 
-- **Figure 1** (`docs/figures/fig1_fold_aucs.pdf`) — Per-fold scaffold-held-out test AUC for the GNN and MolFormer-XL across all five folds, with mean reference lines.
-- **Figure 2** (`docs/figures/fig2_oof_roc.pdf`) — ROC curves on n = 24,391 out-of-fold predictions for Tanimoto-NN, GNN, MolFormer-XL, and the final stacker.
-- **Figure 3** (`docs/figures/fig3_oof_pr.pdf`) — Precision-Recall curves on the same OOF predictions, with the 3.7%-base-rate random reference line.
-- **Figure 4** (`docs/figures/fig4_calibration.pdf`) — Reliability diagram (quantile-binned) comparing raw MolFormer-XL probabilities against the calibrated stacker output. Axes are zoomed to [0, 0.5] × [0, 0.3] because at a 3.7% base rate the upper-right of the unit square is unpopulated.
-- **Figure 5** (`docs/figures/fig5_threshold_sweep.pdf`) — Recall, precision, and F1 vs decision threshold on the OOF stacker output, with Youden's J, base-rate, and F1-max thresholds marked.
+![**Figure 1.** Per-fold scaffold-held-out test AUC for the GNN and MolFormer-XL across all five folds, with mean reference lines.](figures/fig1_fold_aucs.pdf){width=85%}
+
+![**Figure 2.** ROC curves on n = 24,391 out-of-fold predictions for Tanimoto-NN, GNN, MolFormer-XL, and the final stacker.](figures/fig2_oof_roc.pdf){width=85%}
+
+![**Figure 3.** Precision-Recall curves on the same OOF predictions, with the 3.7%-base-rate random reference line.](figures/fig3_oof_pr.pdf){width=85%}
+
+![**Figure 4.** Reliability diagram (quantile-binned) comparing raw MolFormer-XL probabilities against the calibrated stacker output. Axes are zoomed to [0, 0.5] × [0, 0.3] because at a 3.7% base rate the upper-right of the unit square is unpopulated.](figures/fig4_calibration.pdf){width=85%}
+
+![**Figure 5.** Recall, precision, and F1 vs decision threshold on the OOF stacker output, with Youden's J, base-rate, and F1-max thresholds marked.](figures/fig5_threshold_sweep.pdf){width=85%}
 
 ---
 
