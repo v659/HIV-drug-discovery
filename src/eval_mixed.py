@@ -20,12 +20,14 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 from sklearn.metrics import precision_recall_fscore_support, roc_auc_score
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from ensemble_inference import ensemble_predict
+from ensemble_inference import ensemble_predict, SRC_DIR
+from tanimoto_features import build_active_fingerprints
 
 
 def main():
@@ -37,6 +39,11 @@ def main():
     ap.add_argument("--mf-glob", default="src/best_molformer_fold*.pth")
     ap.add_argument("--stacker", default=None)
     ap.add_argument("--gnn-weight", type=float, default=0.5)
+    ap.add_argument("--tta", type=int, default=1, metavar="N",
+                    help="Test-Time Augmentation: SMILES variants per molecule (1=off).")
+    ap.add_argument("--tanimoto-exclude-self", type=float, default=0.999,
+                    help="Drop reference fps with similarity >= T (default 0.999) "
+                         "to prevent identity-leakage. Set to 1.01 to allow self-match.")
     args = ap.parse_args()
 
     with open(args.file) as f:
@@ -58,9 +65,18 @@ def main():
     if args.stacker:
         stacker = torch.load(args.stacker, map_location="cpu", weights_only=False)
 
+    tanimoto_ref_fps = None
+    if stacker is not None and "coef_tanimoto" in stacker:
+        df_actives = pd.read_csv(SRC_DIR / "hiv.csv")
+        active_smi = df_actives[df_actives["HIV_active"] == 1]["smiles"].tolist()
+        tanimoto_ref_fps = build_active_fingerprints(active_smi, [1] * len(active_smi))
+        print(f"Tanimoto reference: {len(tanimoto_ref_fps)} known actives.")
+
     final, _, _, errors = ensemble_predict(
         smiles, gnn_ckpts, mf_ckpts,
         gnn_weight=args.gnn_weight, stacker=stacker,
+        tta_n=args.tta, tanimoto_ref_fps=tanimoto_ref_fps,
+        tanimoto_exclude_self=args.tanimoto_exclude_self,
     )
 
     # Drop any errored rows for clean evaluation.

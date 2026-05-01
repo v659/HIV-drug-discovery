@@ -45,6 +45,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
+from rdkit import Chem
 from torch.utils.data import DataLoader as TorchDataLoader
 from torch_geometric.loader import DataLoader as PyGDataLoader
 
@@ -60,6 +61,7 @@ from features import (
 from model import HIVGNN
 from molformer_model import MolFormerClassifier, load_tokenizer
 from molformer_train import SmilesDataset, make_collate, MAX_SEQ_LEN
+from tanimoto_features import build_active_fingerprints, tanimoto_features
 
 VARIANT = "full" if USE_MORGAN else "desc"
 SRC_DIR = Path(__file__).parent
@@ -176,14 +178,52 @@ def gnn_predict(smiles_list, ckpt_paths, batch_size=64):
 # ---------------------------------------------------------------------------
 # MolFormer side — tokenize SMILES, ensemble across fold checkpoints.
 # ---------------------------------------------------------------------------
-def molformer_predict(smiles_list, ckpt_paths, batch_size=32):
+def _augment_smiles(smiles_list, tta_n):
+    """Generate TTA variants per SMILES.
+
+    For each input SMILES, produce up to `tta_n` valid representations:
+      - Variant 0: RDKit's canonical SMILES (deterministic).
+      - Variants 1..tta_n-1: random non-canonical SMILES via doRandom=True.
+
+    Returns:
+        aug_smiles: flat list of all augmented SMILES.
+        aug_idx:    list of original-input indices, parallel to aug_smiles
+                    (used to average back per molecule).
+
+    If RDKit can't parse a SMILES, we just pass it through as-is — MolFormer
+    will tokenize it character-by-character and produce *some* prediction.
+    """
+    aug_smiles = []
+    aug_idx = []
+    for i, smi in enumerate(smiles_list):
+        mol = Chem.MolFromSmiles(smi)
+        if mol is None:
+            aug_smiles.append(smi)
+            aug_idx.append(i)
+            continue
+        aug_smiles.append(Chem.MolToSmiles(mol))  # canonical
+        aug_idx.append(i)
+        for _ in range(tta_n - 1):
+            try:
+                rsmi = Chem.MolToSmiles(mol, doRandom=True, canonical=False)
+                aug_smiles.append(rsmi)
+                aug_idx.append(i)
+            except Exception:
+                # Some weird molecules can fail random SMILES; skip silently.
+                pass
+    return aug_smiles, aug_idx
+
+
+def molformer_predict(smiles_list, ckpt_paths, batch_size=32, tta_n=1):
     """Run within-MolFormer ensemble inference: mean of sigmoid outputs across folds.
 
     Pipeline:
-      1. Tokenize all SMILES with MolFormer's custom tokenizer.
-      2. Wrap in SmilesDataset (placeholder labels — we only need logits).
-      3. For each MolFormer checkpoint: forward all batches, sigmoid, store.
-      4. Average probabilities across checkpoints.
+      1. (Optional) TTA: expand each SMILES into tta_n variant strings.
+      2. Tokenize all SMILES with MolFormer's custom tokenizer.
+      3. Wrap in SmilesDataset (placeholder labels — we only need logits).
+      4. For each MolFormer checkpoint: forward all batches, sigmoid, store.
+      5. Average probabilities across checkpoints.
+      6. (If TTA) Average variant probabilities back to per-molecule.
 
     Unlike `gnn_predict`, MolFormer is permissive — its tokenizer almost never
     rejects a SMILES (it just tokenizes character-by-character if it can't find
@@ -195,18 +235,28 @@ def molformer_predict(smiles_list, ckpt_paths, batch_size=32):
         ckpt_paths:  list of MolFormer .pth checkpoints (typically 5).
         batch_size:  Smaller default than GNN side (32 vs 64) because MolFormer
                      activations are heavier per-sample.
+        tta_n:       Number of SMILES variants per molecule (1 = no TTA).
+                     Typical values: 5-10. Each variant is a valid SMILES of
+                     the same molecule, so averaging cancels tokenization noise.
 
     Returns:
         probs:  numpy array of shape (len(smiles_list),) with per-molecule
-                probabilities averaged across all MolFormer fold checkpoints.
+                probabilities averaged across all MolFormer fold checkpoints
+                AND all TTA variants.
         errors: empty dict (kept for API symmetry with gnn_predict).
     """
     if not smiles_list:
         return np.zeros((0,), dtype=np.float32), {}
 
+    if tta_n > 1:
+        run_smiles, aug_idx = _augment_smiles(smiles_list, tta_n)
+    else:
+        run_smiles = list(smiles_list)
+        aug_idx = list(range(len(smiles_list)))
+
     tokenizer = load_tokenizer()
     # Use placeholder labels — we only need probabilities here.
-    dataset = SmilesDataset(smiles_list, [0.0] * len(smiles_list))
+    dataset = SmilesDataset(run_smiles, [0.0] * len(run_smiles))
     loader = TorchDataLoader(
         dataset,
         batch_size=batch_size,
@@ -237,15 +287,30 @@ def molformer_predict(smiles_list, ckpt_paths, batch_size=32):
         if DEVICE.type == "cuda":
             torch.cuda.empty_cache()
 
-    # Stack to [n_checkpoints, n_molecules], mean → [n_molecules].
-    return torch.stack(probs_per_model).mean(dim=0).numpy(), {}
+    # Stack to [n_checkpoints, n_run_smiles], mean → [n_run_smiles].
+    variant_probs = torch.stack(probs_per_model).mean(dim=0).numpy()
+
+    if tta_n > 1:
+        # Average variants back to one prediction per original molecule.
+        out = np.zeros(len(smiles_list), dtype=np.float32)
+        counts = np.zeros(len(smiles_list), dtype=np.int32)
+        for j, p in zip(aug_idx, variant_probs):
+            out[j] += float(p)
+            counts[j] += 1
+        return out / np.maximum(counts, 1), {}
+
+    return variant_probs, {}
 
 
 # ---------------------------------------------------------------------------
 # Combiner
 # ---------------------------------------------------------------------------
-def ensemble_predict(smiles_list, gnn_ckpts, mf_ckpts, gnn_weight=0.5, stacker=None):
-    """Combine GNN and MolFormer probabilities.
+def ensemble_predict(
+    smiles_list, gnn_ckpts, mf_ckpts,
+    gnn_weight=0.5, stacker=None, tta_n=1, tanimoto_ref_fps=None,
+    tanimoto_exclude_self=0.999,
+):
+    """Combine GNN, MolFormer (and optionally Tanimoto-NN) probabilities.
 
     Two combination modes:
 
@@ -253,32 +318,55 @@ def ensemble_predict(smiles_list, gnn_ckpts, mf_ckpts, gnn_weight=0.5, stacker=N
          where w = `gnn_weight` ∈ [0,1].
 
       2. Logistic-regression stacker (if `stacker` is provided):
-         P_final = sigmoid(w_gnn·P_gnn + w_mf·P_mf + b)
-         where (w_gnn, w_mf, b) are pre-fitted on out-of-fold val
-         predictions by fit_ensemble_stacker.py. This is strictly more
-         flexible than weighted averaging — it learns the relative
-         reliability of each model AND a bias term that corrects for
-         focal-loss-induced miscalibration.
+         P_final = sigmoid(w_gnn·P_gnn + w_mf·P_mf [+ w_tani·P_tani] + b)
+         where coefficients are pre-fitted on OOF val predictions. The
+         Tanimoto term is only added if the stacker file contains
+         `coef_tanimoto` and `tanimoto_ref_fps` is provided.
+
+    Optional inference-time enhancements:
+      - tta_n > 1: Test-Time Augmentation for MolFormer. Each SMILES is
+        expanded into tta_n valid representations; predictions are averaged
+        per molecule. Smooths out tokenization noise (typically +0.5-1.5 AUC).
+      - tanimoto_ref_fps: List of ECFP4 fingerprints of known actives. If
+        provided AND the stacker has coef_tanimoto, the max-Tanimoto-similarity
+        feature is used as a 3rd stacker input.
 
     Robustness: in either mode, if the GNN can't parse a SMILES, that
-    molecule's final probability falls back to MolFormer-only (which
-    is more permissive about weird SMILES).
+    molecule's final probability falls back to MolFormer-only.
     """
     print(f"GNN ensemble: {len(gnn_ckpts)} folds")
-    print(f"MolFormer ensemble: {len(mf_ckpts)} folds")
+    print(f"MolFormer ensemble: {len(mf_ckpts)} folds (TTA={tta_n})")
+
+    use_tanimoto = (
+        stacker is not None
+        and "coef_tanimoto" in stacker
+        and tanimoto_ref_fps is not None
+        and len(tanimoto_ref_fps) > 0
+    )
+
     if stacker is not None:
-        print(
+        msg = (
             f"Combination: logistic stacker "
             f"(coef_gnn={stacker['coef_gnn']:.3f}, "
             f"coef_mf={stacker['coef_mf']:.3f}, "
-            f"b={stacker['intercept']:.3f})"
         )
+        if use_tanimoto:
+            msg += f"coef_tani={stacker['coef_tanimoto']:.3f}, "
+        msg += f"b={stacker['intercept']:.3f})"
+        print(msg)
     else:
         print(f"Combination: weighted average (GNN={gnn_weight:.2f}, MF={1-gnn_weight:.2f})")
     print("-" * 60)
 
     gnn_probs, gnn_errors = gnn_predict(smiles_list, gnn_ckpts)
-    mf_probs, _ = molformer_predict(smiles_list, mf_ckpts)
+    mf_probs, _ = molformer_predict(smiles_list, mf_ckpts, tta_n=tta_n)
+    tani_probs = (
+        tanimoto_features(
+            smiles_list, tanimoto_ref_fps,
+            exclude_self_threshold=tanimoto_exclude_self,
+        )
+        if use_tanimoto else np.zeros(len(smiles_list), dtype=np.float32)
+    )
 
     final = np.full(len(smiles_list), np.nan, dtype=np.float32)
     for i in range(len(smiles_list)):
@@ -293,6 +381,8 @@ def ensemble_predict(smiles_list, gnn_ckpts, mf_ckpts, gnn_weight=0.5, stacker=N
                 + stacker["coef_mf"] * mf_probs[i]
                 + stacker["intercept"]
             )
+            if use_tanimoto:
+                logit += stacker["coef_tanimoto"] * tani_probs[i]
             final[i] = 1.0 / (1.0 + np.exp(-logit))
         else:
             final[i] = gnn_weight * gnn_probs[i] + (1 - gnn_weight) * mf_probs[i]
@@ -359,6 +449,19 @@ def parse_args():
     p.add_argument(
         "--seed", type=int, default=42,
         help="Seed for --test-actives sampling, for reproducibility.",
+    )
+    p.add_argument(
+        "--tta", type=int, default=1, metavar="N",
+        help="Test-Time Augmentation: number of SMILES variants per molecule "
+             "for MolFormer (1=off, recommended 5-10). Each variant is a valid "
+             "alternate SMILES of the same molecule; averaging cancels "
+             "tokenization noise. Costs N× MolFormer inference time.",
+    )
+    p.add_argument(
+        "--tanimoto-exclude-self", type=float, default=0.999, metavar="T",
+        help="When computing the Tanimoto-NN feature, drop any reference fp "
+             "with similarity >= T to prevent identity-leakage when the query "
+             "is in the reference set. Set to 1.01 to disable (allows self-match).",
     )
     return p.parse_args()
 
@@ -447,10 +550,24 @@ def main():
         threshold = 0.5
         threshold_source = "default"
 
+    # Build Tanimoto reference set ONCE (only if needed). The reference is
+    # all known actives in the full hiv.csv — scaffold splits prevent us
+    # from worrying about identity-leakage at this level of granularity
+    # (a Tanimoto similarity of 1.0 against itself never happens for a
+    # truly held-out molecule).
+    tanimoto_ref_fps = None
+    if stacker is not None and "coef_tanimoto" in stacker:
+        df_actives = pd.read_csv(SRC_DIR / "hiv.csv")
+        active_smi = df_actives[df_actives["HIV_active"] == 1]["smiles"].tolist()
+        tanimoto_ref_fps = build_active_fingerprints(active_smi, [1] * len(active_smi))
+        print(f"Tanimoto reference: {len(tanimoto_ref_fps)} known actives.")
+
     smiles_list = load_inputs(args)
     final, gnn_probs, mf_probs, errors = ensemble_predict(
         smiles_list, gnn_ckpts, mf_ckpts,
         gnn_weight=args.gnn_weight, stacker=stacker,
+        tta_n=args.tta, tanimoto_ref_fps=tanimoto_ref_fps,
+        tanimoto_exclude_self=args.tanimoto_exclude_self,
     )
 
     print(f"\nResults (threshold={threshold:.4f}, source={threshold_source}):")

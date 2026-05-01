@@ -496,6 +496,12 @@ def parse_args():
         help="Only run the first N folds (useful for smoke testing).",
     )
     p.add_argument(
+        "--start-fold", type=int, default=0,
+        help="Skip folds before this index. Use to resume an interrupted "
+             "5-fold run (e.g., --start-fold 4 to train only fold 4 when "
+             "folds 0-3 already have saved checkpoints).",
+    )
+    p.add_argument(
         "--epoch-limit", type=int, default=None,
         help="Cap epochs per fold (useful for smoke testing).",
     )
@@ -551,6 +557,9 @@ def main():
     #   6. Reload best checkpoint and report test AUC.
     # =====================================================================
     for fold_i, (train_idx, val_idx, test_idx) in enumerate(splits):
+        if fold_i < args.start_fold:
+            print(f"Skipping fold {fold_i} (--start-fold={args.start_fold})")
+            continue
         # ---- Diagnostic block: print sizes, positive counts, leakage check ----
         # The leakage check is a sanity assertion — if our scaffold split logic
         # were buggy and let a scaffold appear in both train and val/test,

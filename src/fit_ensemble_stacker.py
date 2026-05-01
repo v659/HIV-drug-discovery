@@ -65,6 +65,7 @@ from model import HIVGNN
 from molformer_model import MolFormerClassifier, load_tokenizer
 from molformer_train import SmilesDataset, make_collate, load_smiles_and_scaffolds
 from ensemble_inference import DEVICE, SRC_DIR, _load_norm_stats
+from tanimoto_features import build_active_fingerprints, tanimoto_features
 
 
 def predict_gnn_fold(smiles_list, ckpt_path, stats, batch_size=64):
@@ -163,9 +164,9 @@ def main():
     print("Loading MolFormer tokenizer...")
     tokenizer = load_tokenizer()
 
-    oof_gnn, oof_mf, oof_labels = [], [], []
+    oof_gnn, oof_mf, oof_tani, oof_labels = [], [], [], []
 
-    for fold_i, (_, val_idx, _) in enumerate(splits):
+    for fold_i, (train_idx, val_idx, _) in enumerate(splits):
         gnn_ckpt = SRC_DIR / args.gnn_pattern.format(i=fold_i)
         mf_ckpt = SRC_DIR / args.mf_pattern.format(i=fold_i)
         if not gnn_ckpt.exists():
@@ -178,9 +179,19 @@ def main():
         val_smiles = [smiles[i] for i in val_idx]
         val_labels = np.array([labels[i] for i in val_idx], dtype=np.float32)
 
-        print(f"\nFold {fold_i}: {len(val_smiles)} val molecules")
+        # Build the per-fold Tanimoto reference set: training actives only.
+        # Using train_idx (not the full dataset) is what makes the Tanimoto
+        # feature an *honest* OOF feature — leakage would inflate AUC.
+        train_actives_smi = [smiles[j] for j in train_idx if int(labels[j]) == 1]
+        train_active_fps = build_active_fingerprints(
+            train_actives_smi, [1] * len(train_actives_smi)
+        )
+
+        print(f"\nFold {fold_i}: {len(val_smiles)} val molecules "
+              f"(reference: {len(train_active_fps)} train actives)")
         gnn_probs = predict_gnn_fold(val_smiles, gnn_ckpt, stats)
         mf_probs = predict_mf_fold(val_smiles, mf_ckpt, tokenizer)
+        tani_probs = tanimoto_features(val_smiles, train_active_fps)
 
         # Drop molecules where GNN failed (RDKit rejection); the stacker
         # only sees molecules where both models produced predictions.
@@ -188,14 +199,19 @@ def main():
         n_dropped = int((~keep).sum())
         gnn_probs = gnn_probs[keep]
         mf_probs = mf_probs[keep]
+        tani_probs = tani_probs[keep]
         v_labels = val_labels[keep]
 
         gnn_auc = roc_auc_score(v_labels, gnn_probs) if len(np.unique(v_labels)) > 1 else float("nan")
         mf_auc = roc_auc_score(v_labels, mf_probs) if len(np.unique(v_labels)) > 1 else float("nan")
-        print(f"  Dropped {n_dropped} GNN-failed | GNN val AUC={gnn_auc:.4f} | MF val AUC={mf_auc:.4f}")
+        tani_auc = roc_auc_score(v_labels, tani_probs) if len(np.unique(v_labels)) > 1 else float("nan")
+        print(f"  Dropped {n_dropped} GNN-failed | "
+              f"GNN val AUC={gnn_auc:.4f} | MF val AUC={mf_auc:.4f} | "
+              f"Tanimoto val AUC={tani_auc:.4f}")
 
         oof_gnn.append(gnn_probs)
         oof_mf.append(mf_probs)
+        oof_tani.append(tani_probs)
         oof_labels.append(v_labels)
 
     if not oof_gnn:
@@ -203,34 +219,48 @@ def main():
 
     oof_gnn = np.concatenate(oof_gnn)
     oof_mf = np.concatenate(oof_mf)
+    oof_tani = np.concatenate(oof_tani)
     oof_labels = np.concatenate(oof_labels)
     print(f"\nTotal OOF molecules: {len(oof_labels)} "
           f"(positives: {int(oof_labels.sum())}, "
           f"{100*oof_labels.mean():.2f}%)")
 
     # ---- Fit logistic-regression stacker on OOF predictions ----
-    X = np.stack([oof_gnn, oof_mf], axis=1)
+    # Three-feature stacker: P_gnn, P_mf, max-Tanimoto-to-train-actives.
+    X = np.stack([oof_gnn, oof_mf, oof_tani], axis=1)
     stacker = LogisticRegression(max_iter=1000)
     stacker.fit(X, oof_labels)
 
     coef_gnn = float(stacker.coef_[0, 0])
     coef_mf = float(stacker.coef_[0, 1])
+    coef_tani = float(stacker.coef_[0, 2])
     intercept = float(stacker.intercept_[0])
 
     print("\n=== Stacker fit ===")
-    print(f"  P_final = sigmoid({coef_gnn:.4f} * P_gnn + {coef_mf:.4f} * P_mf + {intercept:.4f})")
+    print(
+        f"  P_final = sigmoid({coef_gnn:.4f} * P_gnn + "
+        f"{coef_mf:.4f} * P_mf + {coef_tani:.4f} * P_tani + {intercept:.4f})"
+    )
 
-    # Implied effective weight (assuming probabilities are roughly comparable):
-    if coef_gnn + coef_mf > 0:
-        implied_w = coef_gnn / (coef_gnn + coef_mf)
-        print(f"  Implied GNN weight (coef_gnn / (coef_gnn + coef_mf)): {implied_w:.3f}")
+    # Implied weight contributions (rough — assumes probs roughly comparable):
+    coef_sum = coef_gnn + coef_mf + coef_tani
+    if coef_sum > 0:
+        print(f"  Implied weights — GNN: {coef_gnn/coef_sum:.3f}  "
+              f"MF: {coef_mf/coef_sum:.3f}  Tanimoto: {coef_tani/coef_sum:.3f}")
 
     # ---- Compare against simpler baselines on the OOF set ----
     stacked_probs = stacker.predict_proba(X)[:, 1]
     auc_gnn_only = roc_auc_score(oof_labels, oof_gnn)
     auc_mf_only = roc_auc_score(oof_labels, oof_mf)
+    auc_tani_only = roc_auc_score(oof_labels, oof_tani)
     auc_avg = roc_auc_score(oof_labels, 0.5 * oof_gnn + 0.5 * oof_mf)
     auc_stacker = roc_auc_score(oof_labels, stacked_probs)
+
+    # Also fit a 2-feature stacker (no Tanimoto) for honest comparison —
+    # tells us whether the Tanimoto feature actually helps.
+    X2 = np.stack([oof_gnn, oof_mf], axis=1)
+    stacker2 = LogisticRegression(max_iter=1000).fit(X2, oof_labels)
+    auc_stacker_2feat = roc_auc_score(oof_labels, stacker2.predict_proba(X2)[:, 1])
 
     # Tier-1 grid search for the best fixed weight, for comparison.
     best_w, best_auc = 0.5, 0.0
@@ -240,11 +270,13 @@ def main():
             best_w, best_auc = float(w), float(auc)
 
     print("\n=== OOF AUC comparison ===")
-    print(f"  GNN only:                {auc_gnn_only:.4f}")
-    print(f"  MolFormer only:          {auc_mf_only:.4f}")
-    print(f"  Naive 50/50 average:     {auc_avg:.4f}")
-    print(f"  Best fixed weight ({best_w:.2f}): {best_auc:.4f}")
-    print(f"  Logistic stacker:        {auc_stacker:.4f}")
+    print(f"  GNN only:                  {auc_gnn_only:.4f}")
+    print(f"  MolFormer only:            {auc_mf_only:.4f}")
+    print(f"  Tanimoto-NN only:          {auc_tani_only:.4f}")
+    print(f"  Naive 50/50 average:       {auc_avg:.4f}")
+    print(f"  Best fixed weight ({best_w:.2f}):   {best_auc:.4f}")
+    print(f"  Stacker (GNN+MF):          {auc_stacker_2feat:.4f}")
+    print(f"  Stacker (GNN+MF+Tanimoto): {auc_stacker:.4f}  ← saved")
 
     # ---- Threshold tuning on OOF stacker probabilities ----
     # The stacker's intercept calibrates probabilities to the ~3.5% base rate,
@@ -312,9 +344,12 @@ def main():
     torch.save({
         "coef_gnn": coef_gnn,
         "coef_mf": coef_mf,
+        "coef_tanimoto": coef_tani,
         "intercept": intercept,
         "best_fixed_weight": best_w,
         "oof_auc_stacker": auc_stacker,
+        "oof_auc_stacker_2feat": auc_stacker_2feat,
+        "oof_auc_tanimoto_only": auc_tani_only,
         "oof_auc_best_fixed": best_auc,
         "oof_n_molecules": int(len(oof_labels)),
         "oof_base_rate": base_rate,
@@ -323,6 +358,14 @@ def main():
         "threshold_baserate": threshold_baserate,
         "f1_at_best": f1_at_best,
         "youden_j_at_best": j_at_best,
+        # Raw OOF arrays — saved so make_figures.py can produce plots
+        # without re-running per-fold inference (~30 min). Adds ~1MB to the
+        # stacker .pt file but unlocks ROC/PR/calibration figures cheaply.
+        "oof_gnn": oof_gnn.astype(np.float32),
+        "oof_mf": oof_mf.astype(np.float32),
+        "oof_tani": oof_tani.astype(np.float32),
+        "oof_stacked": stacked_probs.astype(np.float32),
+        "oof_labels": oof_labels.astype(np.int8),
     }, out_path)
     print(f"\nSaved stacker to {out_path}")
 
