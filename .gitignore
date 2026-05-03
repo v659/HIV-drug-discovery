@@ -44,3 +44,6 @@ mixed_test_predictions.txt
 src/best_gnn_fold*.pth
 src/ensemble_stacker.pt
 src/global_feature_stats_*.pt
+vertopal.com_paper/
+vertopal.com_paper.zip
+hiv_classifier_artifacts_v1.zip
