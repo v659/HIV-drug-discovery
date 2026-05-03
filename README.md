@@ -1,8 +1,13 @@
 # HIV-drug-discovery
 
+[![Hugging Face Space](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Live%20demo-blue)](https://huggingface.co/spaces/Arj321/hiv-screen)
+[![Zenodo DOI](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.19946459-blue)](https://doi.org/10.5281/zenodo.19946459)
+
 An open-source ensemble of a **Graph Neural Network** and the **MolFormer-XL transformer** for **HIV activity classification**, built on a $0 compute budget (free Google Colab + local Apple Silicon).
 
 The goal: provide a transparent, fully reproducible baseline that helps prioritize candidate molecules before wet-lab assays — without requiring institutional GPU access.
+
+**Try it:** [Live demo on Hugging Face Spaces](https://huggingface.co/spaces/Arj321/hiv-screen) — paste a SMILES, get a prediction.
 
 **Status:** Research prototype.
 
