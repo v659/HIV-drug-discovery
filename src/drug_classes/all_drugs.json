@@ -1,0 +1,162 @@
+[
+  {
+    "name": "Zidovudine",
+    "class": "nrti",
+    "smiles": "CC1=CN(C(=O)NC1=O)[C@H]2C[C@@H]([C@H](O2)CO)N=[N+]=[N-]"
+  },
+  {
+    "name": "Lamivudine",
+    "class": "nrti",
+    "smiles": "C1[C@H](O[C@H](S1)CO)N2C=CC(=NC2=O)N"
+  },
+  {
+    "name": "Stavudine",
+    "class": "nrti",
+    "smiles": "CC1=CN(C(=O)NC1=O)[C@H]2C=C[C@H](O2)CO"
+  },
+  {
+    "name": "Emtricitabine",
+    "class": "nrti",
+    "smiles": "C1[C@H](O[C@H](S1)CO)N2C=C(C(=NC2=O)N)F"
+  },
+  {
+    "name": "Didanosine",
+    "class": "nrti",
+    "smiles": "C1C[C@@H](O[C@@H]1CO)N2C=NC3=C2N=CNC3=O"
+  },
+  {
+    "name": "Abacavir",
+    "class": "nrti",
+    "smiles": "C1CC1NC2=C3C(=NC(=N2)N)N(C=N3)[C@@H]4C[C@@H](C=C4)CO"
+  },
+  {
+    "name": "Tenofovir",
+    "class": "nrti",
+    "smiles": "C[C@H](CN1C=NC2=C(N=CN=C21)N)OCP(=O)(O)O"
+  },
+  {
+    "name": "Zalcitabine",
+    "class": "nrti",
+    "smiles": "C1C[C@@H](O[C@@H]1CO)N2C=CC(=NC2=O)N"
+  },
+  {
+    "name": "Nevirapine",
+    "class": "nnrti",
+    "smiles": "CC1=C2C(=NC=C1)N(C3=C(C=CC=N3)C(=O)N2)C4CC4"
+  },
+  {
+    "name": "Efavirenz",
+    "class": "nnrti",
+    "smiles": "C1CC1C#C[C@]2(C3=C(C=CC(=C3)Cl)NC(=O)O2)C(F)(F)F"
+  },
+  {
+    "name": "Etravirine",
+    "class": "nnrti",
+    "smiles": "CC1=CC(=CC(=C1OC2=NC(=NC(=C2Br)N)NC3=CC=C(C=C3)C#N)C)C#N"
+  },
+  {
+    "name": "Rilpivirine",
+    "class": "nnrti",
+    "smiles": "CC1=CC(=CC(=C1NC2=NC(=NC=C2)NC3=CC=C(C=C3)C#N)C)/C=C/C#N"
+  },
+  {
+    "name": "Doravirine",
+    "class": "nnrti",
+    "smiles": "CN1C(=NNC1=O)CN2C=CC(=C(C2=O)OC3=CC(=CC(=C3)C#N)Cl)C(F)(F)F"
+  },
+  {
+    "name": "Delavirdine",
+    "class": "nnrti",
+    "smiles": "CC(C)NC1=C(N=CC=C1)N2CCN(CC2)C(=O)C3=CC4=C(N3)C=CC(=C4)NS(=O)(=O)C"
+  },
+  {
+    "name": "Saquinavir",
+    "class": "pi",
+    "smiles": "CC(C)(C)NC(=O)[C@@H]1C[C@@H]2CCCC[C@@H]2CN1C[C@H]([C@H](CC3=CC=CC=C3)NC(=O)[C@H](CC(=O)N)NC(=O)C4=NC5=CC=CC=C5C=C4)O"
+  },
+  {
+    "name": "Ritonavir",
+    "class": "pi",
+    "smiles": "CC(C)C1=NC(=CS1)CN(C)C(=O)N[C@@H](C(C)C)C(=O)N[C@@H](CC2=CC=CC=C2)C[C@@H]([C@H](CC3=CC=CC=C3)NC(=O)OCC4=CN=CS4)O"
+  },
+  {
+    "name": "Indinavir",
+    "class": "pi",
+    "smiles": "CC(C)(C)NC(=O)[C@@H]1CN(CCN1C[C@H](C[C@@H](CC2=CC=CC=C2)C(=O)N[C@@H]3[C@@H](CC4=CC=CC=C34)O)O)CC5=CN=CC=C5"
+  },
+  {
+    "name": "Nelfinavir",
+    "class": "pi",
+    "smiles": "CC1=C(C=CC=C1O)C(=O)N[C@@H](CSC2=CC=CC=C2)[C@@H](CN3C[C@H]4CCCC[C@H]4C[C@H]3C(=O)NC(C)(C)C)O"
+  },
+  {
+    "name": "Amprenavir",
+    "class": "pi",
+    "smiles": "CC(C)CN(C[C@H]([C@H](CC1=CC=CC=C1)NC(=O)O[C@H]2CCOC2)O)S(=O)(=O)C3=CC=C(C=C3)N"
+  },
+  {
+    "name": "Lopinavir",
+    "class": "pi",
+    "smiles": "CC1=C(C(=CC=C1)C)OCC(=O)N[C@@H](CC2=CC=CC=C2)[C@H](C[C@H](CC3=CC=CC=C3)NC(=O)[C@H](C(C)C)N4CCCNC4=O)O"
+  },
+  {
+    "name": "Atazanavir",
+    "class": "pi",
+    "smiles": "CC(C)(C)[C@@H](C(=O)N[C@@H](CC1=CC=CC=C1)[C@H](CN(CC2=CC=C(C=C2)C3=CC=CC=N3)NC(=O)[C@H](C(C)(C)C)NC(=O)OC)O)NC(=O)OC"
+  },
+  {
+    "name": "Fosamprenavir",
+    "class": "pi",
+    "smiles": "CC(C)CN(C[C@H]([C@H](CC1=CC=CC=C1)NC(=O)O[C@H]2CCOC2)OP(=O)(O)O)S(=O)(=O)C3=CC=C(C=C3)N"
+  },
+  {
+    "name": "Tipranavir",
+    "class": "pi",
+    "smiles": "CCC[C@]1(CC(=C(C(=O)O1)[C@H](CC)C2=CC(=CC=C2)NS(=O)(=O)C3=NC=C(C=C3)C(F)(F)F)O)CCC4=CC=CC=C4"
+  },
+  {
+    "name": "Darunavir",
+    "class": "pi",
+    "smiles": "CC(C)CN(C[C@H]([C@H](CC1=CC=CC=C1)NC(=O)O[C@H]2CO[C@@H]3[C@H]2CCO3)O)S(=O)(=O)C4=CC=C(C=C4)N"
+  },
+  {
+    "name": "Raltegravir",
+    "class": "insti",
+    "smiles": "CC1=NN=C(O1)C(=O)NC(C)(C)C2=NC(=C(C(=O)N2C)O)C(=O)NCC3=CC=C(C=C3)F"
+  },
+  {
+    "name": "Elvitegravir",
+    "class": "insti",
+    "smiles": "CC(C)[C@@H](CO)N1C=C(C(=O)C2=C1C=C(C(=C2)CC3=C(C(=CC=C3)Cl)F)OC)C(=O)O"
+  },
+  {
+    "name": "Dolutegravir",
+    "class": "insti",
+    "smiles": "C[C@@H]1CCO[C@@H]2N1C(=O)C3=C(C(=O)C(=CN3C2)C(=O)NCC4=C(C=C(C=C4)F)F)O"
+  },
+  {
+    "name": "Bictegravir",
+    "class": "insti",
+    "smiles": "C1C[C@@H]2C[C@H]1N3[C@H](O2)CN4C=C(C(=O)C(=C4C3=O)O)C(=O)NCC5=C(C=C(C=C5F)F)F"
+  },
+  {
+    "name": "Cabotegravir",
+    "class": "insti",
+    "smiles": "C[C@H]1CO[C@H]2N1C(=O)C3=C(C(=O)C(=CN3C2)C(=O)NCC4=C(C=C(C=C4)F)F)O"
+  },
+  {
+    "name": "Maraviroc",
+    "class": "entry",
+    "smiles": "CC1=NN=C(N1C2C[C@H]3CC[C@@H](C2)N3CC[C@@H](C4=CC=CC=C4)NC(=O)C5CCC(CC5)(F)F)C(C)C"
+  },
+  {
+    "name": "Fostemsavir",
+    "class": "entry",
+    "smiles": "CC1=NN(C=N1)C2=NC=C(C3=C2N(C=C3C(=O)C(=O)N4CCN(CC4)C(=O)C5=CC=CC=C5)COP(=O)(O)O)OC"
+  },
+  {
+    "name": "Lenacapavir",
+    "class": "entry",
+    "smiles": "CC(C)(C#CC1=NC(=C(C=C1)C2=C3C(=C(C=C2)Cl)C(=NN3CC(F)(F)F)NS(=O)(=O)C)[C@H](CC4=CC(=CC(=C4)F)F)NC(=O)CN5C6=C([C@H]7C[C@H]7C6(F)F)C(=N5)C(F)(F)F)S(=O)(=O)C"
+  }
+]
