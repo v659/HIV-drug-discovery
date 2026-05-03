@@ -47,3 +47,4 @@ src/global_feature_stats_*.pt
 vertopal.com_paper/
 vertopal.com_paper.zip
 hiv_classifier_artifacts_v1.zip
+train_on_kaggle.ipynb
